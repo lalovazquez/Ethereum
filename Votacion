@@ -1,0 +1,40 @@
+pragma solidity 0.5.11;
+
+contract Votacion {
+    
+    address ine;
+    struct Votante {
+        bool votante_autorizado;
+        bool voto_emitido;
+    }
+    
+    modifier onlyINE() {
+        require(ine == msg.sender, 'No tienes permiso para autorizar');
+        _;
+    }
+    
+    bytes32[] candidatos;
+    
+    mapping (address => Votante) votantes;
+    mapping (uint => uint ) votos_recibidos;
+    
+    constructor(bytes32[] memory _candidatos) public {
+        ine = msg.sender;
+        votantes[ine].votante_autorizado = true;
+        candidatos = _candidatos;
+    }
+    
+    function autorizarVotantes(address _votante) public onlyINE{
+        require(!votantes[_votante].votante_autorizado,'Usuario previamente autorizado');
+        votantes[_votante].votante_autorizado = true;
+    }
+    
+    function votar(uint _candidato) public {
+        Votante storage elector = votantes[msg.sender];
+        require(elector.votante_autorizado,'Votante no autorizado');
+        require(!elector.voto_emitido, 'Voto emitido previamente');
+        require(_candidato < candidatos.length,'Opcion no valida');
+        elector.voto_emitido = true;
+        votos_recibidos[_candidato]+=1;
+    }
+}
